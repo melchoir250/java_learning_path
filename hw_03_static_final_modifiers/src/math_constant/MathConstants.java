@@ -14,7 +14,7 @@ public class MathConstants {
 
     void print(double r) {
         System.out.println("Radius: " + r);
-        System.out.println("Circle area: " + calculateCircleArea(r));
+        System.out.println("Circle Area: " + calculateCircleArea(r));
         System.out.println("Circumference: " + calculateCircumference(r));
     }
 }

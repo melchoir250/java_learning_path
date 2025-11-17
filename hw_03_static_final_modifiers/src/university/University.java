@@ -10,8 +10,8 @@ public class University {
         this.studentName = someStudentName;
     }
 
-    public static void changeUniversityName(String newName) {
-        University.universityName = newName;
+    public static void changeUniversityName(String newUniversityName) {
+        University.universityName = newUniversityName;
     }
 
     String getStudentName() {
@@ -19,7 +19,7 @@ public class University {
     }
 
     void printStudentInfo() {
-        System.out.println("Имя: " + getStudentName() + ", ID: " + this.studentID +
-                ", Университет: " + University.universityName);
+        System.out.println("Name: " + getStudentName() + ", ID: " + this.studentID +
+                ", University: " + University.universityName);
     }
 }

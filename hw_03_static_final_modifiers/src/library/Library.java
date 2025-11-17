@@ -39,20 +39,21 @@ public class Library {
     }
 }
 
+
 class LibraryTest{
     public static void main(String[] args) {
-        Library lib1 = new Library();
-        System.out.println(lib1.getBookTitle());
-        System.out.println(lib1.getAuthor());
-        System.out.println(lib1.getYear());
-        System.out.println(lib1.getCategory());
-        lib1.setBookTitle("1984");
-        lib1.setAuthor("Джордж Оруэлл");
-        lib1.setYear(1949);
-        lib1.setCategory("Роман");
-        System.out.println(lib1.getBookTitle());
-        System.out.println(lib1.getAuthor());
-        System.out.println(lib1.getYear());
-        System.out.println(lib1.getCategory());
+        Library library1 = new Library();
+        System.out.println(library1.getBookTitle());
+        System.out.println(library1.getAuthor());
+        System.out.println(library1.getYear());
+        System.out.println(library1.getCategory());
+        library1.setBookTitle("1984");
+        library1.setAuthor("Джордж Оурелл");
+        library1.setYear(1949);
+        library1.setCategory("Роман");
+        System.out.println(library1.getBookTitle());
+        System.out.println(library1.getAuthor());
+        System.out.println(library1.getYear());
+        System.out.println(library1.getCategory());
     }
 }

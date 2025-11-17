@@ -11,7 +11,7 @@ public class Company {
     }
 
     public static void printCompanyName() {
-        System.out.println("companyName: " + companyName);
+        System.out.println("CompanyName: " + companyName);
     }
 
     String getEmployeeName() {
@@ -23,6 +23,7 @@ public class Company {
     }
 
     void print() {
-        System.out.println("companyName: " + companyName + ", employeeName: " + getEmployeeName() + ", employeeID: " + this.employeeID);
+        System.out.println("companyName: " + companyName + ", employeeName: " + getEmployeeName() +
+                ", employeeID: " + this.employeeID);
     }
 }

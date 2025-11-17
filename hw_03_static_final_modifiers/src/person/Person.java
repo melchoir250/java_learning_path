@@ -19,7 +19,7 @@ public class Person {
         return this.lastName;
     }
 
-    String getSNN() {
+    String getSnn() {
         return this.snn;
     }
 
@@ -32,6 +32,6 @@ public class Person {
     }
 
     void printPersonInfo() {
-        System.out.println("Имя: " + getFirstName() + ", Фамилия: " + getLastName() + ", SNN: " + getSNN());
+        System.out.println("Имя: " + getFirstName() + ", Фамилия: " + getLastName() + ", SNN: " + getSnn());
     }
 }

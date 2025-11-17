@@ -14,13 +14,13 @@ public class GameSettings {
         GameSettings.maxPlayers = newMaxPlayers;
     }
 
-    void addPlayer() {
+    void addPlayers() {
         this.currentPlayers ++;
         this.currentPlayers = Math.min(GameSettings.maxPlayers, this.currentPlayers);
     }
 
     void printGameStatus() {
-        System.out.println("Название игры: " + this.gameName + ", Текущее количество игроков: " + this.currentPlayers
-                + ", Макс.кол-во игроков: " + GameSettings.maxPlayers);
+        System.out.println("Название игры: " + this.gameName + ", Текущее количество игроков: " + this.currentPlayers +
+                ", Максимальное количество игроков: " + GameSettings.maxPlayers);
     }
 }
