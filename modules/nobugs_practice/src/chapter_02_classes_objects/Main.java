@@ -17,5 +17,8 @@ public class Main {
         Rectangle rect1 = new Rectangle(12, 4);
         System.out.println("Площадь: " + rect1.getArea());
         System.out.println("Квадрат? " + rect1.isSquare());
+
+        Circle rad1 = new Circle(5);
+        System.out.println("Площадь круга: " + rad1.getArea());
     }
 }
