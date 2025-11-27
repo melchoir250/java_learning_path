@@ -1,7 +1,7 @@
 package if_else_task;
 
 public class AgeDiscountChecker {
-    public static void Scanner(int age) {
+    public static void checkDiscount(int age) {
         if (0 < age && age < 18) {
             System.out.println("Ваша скидка составляет 25%");
         } else if (age >= 65) {
@@ -14,9 +14,9 @@ public class AgeDiscountChecker {
     }
 
     public static void main(String[] args) {
-        Scanner(12);
-        Scanner(22);
-        Scanner(72);
-        Scanner(-2);
+        checkDiscount(12);
+        checkDiscount(22);
+        checkDiscount(72);
+        checkDiscount(-2);
     }
 }

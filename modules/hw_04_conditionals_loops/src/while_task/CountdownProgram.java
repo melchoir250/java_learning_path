@@ -5,10 +5,9 @@ public class CountdownProgram {
         if (num < 0) {
             System.out.println("Число должно быть положительным");
         }
-        int i = 1;
-        while (i <= num) {
+        while (num >= 0) {
             System.out.println(num);
-            num -= i;
+            num--;
         }
     }
 

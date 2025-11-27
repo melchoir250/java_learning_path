@@ -2,18 +2,26 @@ package switch_task;
 
 public class SimpleCalculator {
     public static void Calculate(int a, int b, String operator) {
-        if (b == 0) {
-            System.out.println("На ноль делить нельзя");
-        } else {
-            if (operator == "+") {
+        switch (operator) {
+            case "+":
                 System.out.println(a + b);
-            } else if (operator == "-") {
+                break;
+
+            case "-":
                 System.out.println(a - b);
-            } else if (operator == "*") {
+                break;
+
+            case "*":
                 System.out.println(a * b);
-            } else if (operator == "/") {
-                System.out.println(a / b);
-            }
+                break;
+
+            case "/":
+                if (b == 0) {
+                    System.out.println("На ноль делить нельзя.");
+                } else {
+                    System.out.println(a / b);
+                }
+                break;
         }
     }
 
