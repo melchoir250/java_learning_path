@@ -10,7 +10,7 @@ public class Main {
 
         System.out.println("Меняется животное");
 
-        Cat cat = new Cat();
+        Pet cat = new Cat();
         pet_manager.setPet(cat);
         pet_manager.handlePet();
     }

@@ -8,7 +8,7 @@ public class Museum {
     }
 
     public void showExibit() {
-        exhibit.describe();
+        System.out.println(exhibit.describe());
         exhibit.preserve();
     }
 }
