@@ -20,6 +20,10 @@ public class Task01_MathOperationDemo {
         System.out.println("addition: " + addition.operate(x, y));
         System.out.println("subtraction: " + subtraction.operate(x, y));
         System.out.println("multiplication: " + multiplication.operate(x, y));
-        System.out.println("division: " + division.operate(x, y));
+        try {
+            System.out.println("division: " + division.operate(x, y));
+        } catch (ArithmeticException e) {
+            System.out.println("division: ошибка - " + e.getMessage());
+        }
     }
 }
