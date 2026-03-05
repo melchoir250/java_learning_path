@@ -1,4 +1,4 @@
-package chapter_06_oop_principles.notifications;
+package chapter_06_oop_principles.notifier_system;
 
 import java.util.ArrayList;
 import java.util.List;
