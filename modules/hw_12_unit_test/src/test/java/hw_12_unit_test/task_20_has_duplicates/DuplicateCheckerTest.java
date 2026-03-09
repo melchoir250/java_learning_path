@@ -30,4 +30,10 @@ public class DuplicateCheckerTest {
         int[] numbers = {};
         assertFalse(duplicateChecker.hasDuplicates(numbers));
     }
+
+    @Test
+    public void allElementsSameDuplicateChecker() {
+        int[] numbers = {7, 7, 7, 7};
+        assertTrue(duplicateChecker.hasDuplicates(numbers));
+    }
 }

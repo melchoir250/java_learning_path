@@ -16,7 +16,12 @@ public class JsonValidatorTest {
     @ParameterizedTest
     @CsvSource({
             "'{\"key\":\"value\"}', true",
+            "'{\"name\":\"John\",\"age\":30}', true",
+            "'[1,2,3]', true",
             "'invalid json', false",
+            "'{key:value}', false",
+            "'{\"key\":\"value\"', false",
+            "'', true"
     })
     public void parametrizedJsonValidator(String json, boolean expected) {
         assertEquals(expected, jsonValidator.isValidJson(json));

@@ -17,6 +17,8 @@ public class AnagramCheckerTest {
     @CsvSource({
             "listen, silent, true",
             "java, python, false",
+            "Triangle, Integral, true",
+            "'Dormitory', 'Dirty room', true"
     })
     public void anagramCheckerParametrize(String word1, String word2, boolean expect) {
         assertEquals(expect, anagramChecker.isAnagram(word1, word2));
@@ -25,5 +27,15 @@ public class AnagramCheckerTest {
     @Test
     public void anagramCheckerNull() {
         assertFalse(anagramChecker.isAnagram(null, "word"));
+    }
+
+    @Test
+    public void anagramCheckerSecondWordNull() {
+        assertFalse(anagramChecker.isAnagram("word", null));
+    }
+
+    @Test
+    public void anagramCheckerBothNull() {
+        assertFalse(anagramChecker.isAnagram(null, null));
     }
 }
