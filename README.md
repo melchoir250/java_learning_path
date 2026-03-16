@@ -93,7 +93,7 @@ java_learning_path/modules/
 ```bash
 cd [название_проекта]/src
 javac *.java
-java Main
+java Main.java
 ```
 
 ## Статус выполнения
@@ -106,8 +106,10 @@ java Main
 | Conditionals & Loops    | ✅ Завершен      | Условные операторы и циклы в Java |
 | OOP Principles Practice | ✅ Завершен      | Практика принципов ООП            |
 | Java Collections        | ✅ Завершен      | Коллекции                         |
-|Exceptions & Generics   | ✅ Завершен      | Исключения и дженерики            |
+| Exceptions & Generics   | ✅ Завершен      | Исключения и дженерики            |
 | Multithreading          | ✅ Завершен    | Потоки, синхронизация, Executor   |
+| Unit Test               | ✅ Завершен    | Написание тестов                  |
+| Debugging               | ✅ Завершен    | Debugging                         |
 | NoBugs Practice         | 🔄 В процессе   | Дополнительные задачи             |
 | [Следующие темы]        | ⏳ Запланировано | По мере изучения                  |
 
