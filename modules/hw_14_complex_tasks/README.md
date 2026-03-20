@@ -9,40 +9,61 @@
 ## Структура проекта
 
 ```
-hw_complex_tasks/
+hw_14_complex_tasks/
 ├── README.md                 # Этот файл с описанием всех задач
+├── pom.xml                   # Maven конфигурация
 └── src/
-    └── main/
+    ├── main/
+    │   └── java/
+    │       ├── task_01_entity_manager/
+    │       │   ├── Entity.java
+    │       │   ├── EntityManager.java
+    │       │   ├── Main.java
+    │       │   ├── README.md
+    │       │   └── Student.java
+    │       ├── task_02_user_validator/
+    │       │   ├── InvalidUserException.java
+    │       │   ├── README.md
+    │       │   ├── User.java
+    │       │   └── UserValidator.java
+    │       ├── task_03_student_grades/
+    │       │   ├── GradeService.java
+    │       │   ├── InvalidGradeException.java
+    │       │   ├── README.md
+    │       │   └── StudentGrade.java
+    │       ├── task_04_movie_rating/
+    │       │   ├── InvalidRatingException.java
+    │       │   ├── Movie.java
+    │       │   ├── MovieService.java
+    │       │   ├── README.md
+    │       │   └── Rating.java
+    │       ├── task_05_inventory/
+    │       │   ├── InventoryService.java
+    │       │   ├── OutOfStockException.java
+    │       │   ├── Product.java
+    │       │   └── README.md
+    │       └── task_06_task_manager/
+    │           ├── DuplicateTaskException.java
+    │           ├── Priority.java
+    │           ├── README.md
+    │           ├── Task.java
+    │           ├── TaskNotFoundException.java
+    │           ├── TaskService.java
+    │           └── TaskStatus.java
+    └── test/
         └── java/
-            └── hw_complex_tasks/
-                ├── task01_entity_manager/
-                │   ├── EntityManager.java
-                │   └── README.md
-                ├── task02_user_validator/
-                │   ├── User.java
-                │   ├── UserValidator.java
-                │   ├── InvalidUserException.java
-                │   └── README.md
-                ├── task03_student_grades/
-                │   ├── StudentGrade.java
-                │   ├── GradeService.java
-                │   ├── InvalidGradeException.java
-                │   └── README.md
-                ├── task04_movie_ratings/
-                │   ├── Movie.java
-                │   ├── Rating.java
-                │   ├── MovieService.java
-                │   └── README.md
-                ├── task05_inventory/
-                │   ├── Product.java
-                │   ├── InventoryService.java
-                │   ├── OutOfStockException.java
-                │   └── README.md
-                └── task06_task_manager/
-                    ├── Task.java
-                    ├── TaskService.java
-                    ├── DuplicateTaskException.java
-                    └── README.md
+            ├── task_01_entity_manager/
+            │   └── EntityManagerTest.java
+            ├── task_02_user_validator/
+            │   └── UserValidatorTest.java
+            ├── task_03_student_grades/
+            │   └── GradeServiceTest.java
+            ├── task_04_movie_rating/
+            │   └── MovieServiceTest.java
+            ├── task_05_inventory/
+            │   └── InventoryServiceTest.java
+            └── task_06_task_manager/
+                └── TaskServiceTest.java
 ```
 
 ---
