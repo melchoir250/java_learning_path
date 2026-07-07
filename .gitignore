@@ -56,7 +56,6 @@ logs/
 build.gradle
 gradlew
 gradlew.bat
-pom.xml
 
 # --- Environment & configuration
 .env
