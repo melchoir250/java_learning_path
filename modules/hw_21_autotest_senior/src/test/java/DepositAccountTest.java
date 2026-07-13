@@ -5,72 +5,74 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import constants.DepositLimits;
-import io.restassured.specification.RequestSpecification;
-import models.CreateAccountResponse;
-import models.CreateUserRequest;
+import generators.RandomData;
 import models.DepositRequest;
 import models.DepositResponse;
 import models.comparison.ModelAssertions;
-import requests.steps.AdminSteps;
+import requests.steps.CustomerContext;
 import requests.steps.UserSteps;
 
 @DisplayName("POST /api/v1/accounts/deposit")
 class DepositAccountTest extends BaseTest {
 
-  @ParameterizedTest()
+  @ParameterizedTest
   @MethodSource("positiveDepositAmounts")
-  void shouldAcceptPositiveDepositAmount(double depositAmount) {
-    CreateUserRequest user = AdminSteps.createUser();
-    RequestSpecification userSpec = UserSteps.authAs(user);
-    CreateAccountResponse account = UserSteps.createAccount(userSpec);
-    DepositRequest depositRequest = UserSteps.depositRequest(account.getId(), depositAmount);
-    DepositResponse deposit = UserSteps.deposit(userSpec, depositRequest);
+  void shouldAcceptValidDepositAmount(double depositAmount) {
+    CustomerContext customer = CustomerContext.create()
+      .withAccount();
+
+    DepositRequest depositRequest = customer.depositRequest(depositAmount);
+    DepositResponse deposit = UserSteps.deposit(customer.spec(), depositRequest);
+
     ModelAssertions.assertThatModels(depositRequest, deposit)
       .match();
-    UserSteps.assertAccountBalance(userSpec, account.getId(), depositAmount);
+    customer.assertBalance(depositAmount);
   }
 
   static Stream<Arguments> positiveDepositAmounts() {
     return Stream.of(
-      Arguments.of(DepositLimits.STANDARD),
-      Arguments.of(DepositLimits.WITH_CENTS),
+      Arguments.of(RandomData.depositAmount()),
       Arguments.of(DepositLimits.MIN),
       Arguments.of(DepositLimits.MAX),
       Arguments.of(DepositLimits.JUST_BELOW_MAX));
   }
 
-  @ParameterizedTest()
-  @MethodSource("negativeDepositAmounts")
-  void shouldRejectInvalidDepositAmount(double depositAmount, String expectedError) {
-    CreateUserRequest user = AdminSteps.createUser();
-    RequestSpecification userSpec = UserSteps.authAs(user);
-    CreateAccountResponse account = UserSteps.createAccount(userSpec);
-    UserSteps.depositExpectingBadRequest(
-      userSpec,
-      UserSteps.depositRequest(account.getId(), depositAmount),
-      expectedError);
-    UserSteps.assertAccountBalance(userSpec, account.getId(), 0);
+  @ParameterizedTest
+  @MethodSource("belowMinDepositAmounts")
+  void shouldRejectDepositBelowMinimum(double depositAmount) {
+    CustomerContext customer = CustomerContext.create()
+      .withAccount();
+
+    UserSteps.depositExpectingMinAmountError(customer.spec(), customer.depositRequest(depositAmount));
+    customer.assertBalance(0);
   }
 
-  static Stream<Arguments> negativeDepositAmounts() {
+  static Stream<Arguments> belowMinDepositAmounts() {
     return Stream.of(
-      Arguments.of(DepositLimits.NEGATIVE, DepositLimits.MIN_AMOUNT_ERROR),
-      Arguments.of(DepositLimits.ZERO, DepositLimits.MIN_AMOUNT_ERROR),
-      Arguments.of(DepositLimits.ABOVE_MAX, DepositLimits.MAX_AMOUNT_ERROR));
+      Arguments.of(DepositLimits.NEGATIVE),
+      Arguments.of(DepositLimits.ZERO));
+  }
+
+  @Test
+  void shouldRejectDepositAboveMaximum() {
+    CustomerContext customer = CustomerContext.create()
+      .withAccount();
+
+    UserSteps.depositExpectingMaxAmountError(
+      customer.spec(),
+      customer.depositRequest(DepositLimits.ABOVE_MAX));
+    customer.assertBalance(0);
   }
 
   @Test
   void shouldRejectDepositToNonExistingAccount() {
-    CreateUserRequest user = AdminSteps.createUser();
-    RequestSpecification userSpec = UserSteps.authAs(user);
-    CreateAccountResponse account = UserSteps.createAccount(userSpec);
+    CustomerContext customer = CustomerContext.create()
+      .withAccount();
+
     UserSteps.depositExpectingForbidden(
-      userSpec,
-      UserSteps.depositRequest(
-        DepositLimits.NON_EXISTING_ACCOUNT_ID,
-        DepositLimits.STANDARD),
-      DepositLimits.UNAUTHORIZED_ACCOUNT_ERROR);
-    UserSteps.assertAccountBalance(userSpec, account.getId(), 0);
+      customer.spec(),
+      UserSteps.depositRequest(DepositLimits.NON_EXISTING_ACCOUNT_ID, RandomData.depositAmount()));
+    customer.assertBalance(0);
   }
 
   @Test
@@ -78,6 +80,6 @@ class DepositAccountTest extends BaseTest {
     UserSteps.depositExpectingUnauthorized(
       UserSteps.depositRequest(
         DepositLimits.UNAUTHORIZED_TEST_ACCOUNT_ID,
-        DepositLimits.STANDARD));
+        RandomData.depositAmount()));
   }
 }

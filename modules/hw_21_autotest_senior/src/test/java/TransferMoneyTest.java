@@ -5,99 +5,86 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import constants.DepositLimits;
-import io.restassured.specification.RequestSpecification;
-import models.CreateAccountResponse;
-import models.CreateUserRequest;
+import generators.RandomData;
 import models.DepositTransferRequest;
 import models.DepositTransferResponse;
 import models.comparison.ModelAssertions;
-import requests.steps.AdminSteps;
+import requests.steps.CustomerContext;
 import requests.steps.UserSteps;
 
 @DisplayName("POST /api/v1/accounts/transfer")
 class TransferMoneyTest extends BaseTest {
 
-  @ParameterizedTest()
+  @ParameterizedTest
   @MethodSource("positiveTransferAmounts")
-  void shouldAcceptPositiveTransferAmount(double depositAmount, double transferAmount) {
-    CreateUserRequest user1 = AdminSteps.createUser();
-    RequestSpecification userSpec1 = UserSteps.authAs(user1);
-    CreateAccountResponse account1 = UserSteps.createAccount(userSpec1);
-    UserSteps.deposit(userSpec1, account1.getId(), depositAmount);
+  void shouldAcceptValidTransferAmount(double depositAmount, double transferAmount) {
+    CustomerContext sender = CustomerContext.create()
+      .withAccount()
+      .withDeposit(depositAmount);
+    CustomerContext receiver = CustomerContext.create()
+      .withAccount();
 
-    CreateUserRequest user2 = AdminSteps.createUser();
-    RequestSpecification userSpec2 = UserSteps.authAs(user2);
-    CreateAccountResponse account2 = UserSteps.createAccount(userSpec2);
-
-    DepositTransferRequest transferRequest = UserSteps.transferRequest(
-      account1.getId(), account2.getId(), transferAmount);
-    DepositTransferResponse transfer = UserSteps.transfer(userSpec1, transferRequest);
+    DepositTransferRequest transferRequest = sender.transferRequestTo(receiver, transferAmount);
+    DepositTransferResponse transfer = UserSteps.transfer(sender.spec(), transferRequest);
 
     ModelAssertions.assertThatModels(transferRequest, transfer)
       .match();
-
-    UserSteps.assertAccountBalance(userSpec1, account1.getId(), depositAmount - transferAmount);
-    UserSteps.assertAccountBalance(userSpec2, account2.getId(), transferAmount);
+    sender.assertBalance(depositAmount - transferAmount);
+    receiver.assertBalance(transferAmount);
   }
 
   static Stream<Arguments> positiveTransferAmounts() {
+    double randomDeposit = RandomData.depositAmount();
     return Stream.of(
-      Arguments.of(DepositLimits.STANDARD, DepositLimits.STANDARD_TRANSFER),
-      Arguments.of(DepositLimits.STANDARD, DepositLimits.MIN));
+      Arguments.of(randomDeposit, RandomData.transferAmount(randomDeposit)),
+      Arguments.of(DepositLimits.MAX, DepositLimits.MIN),
+      Arguments.of(DepositLimits.MAX, DepositLimits.JUST_BELOW_MAX));
   }
 
-  @ParameterizedTest()
-  @MethodSource("positiveMaxTransferAmounts")
-  void shouldAcceptPositiveTransferAmountNearMax(double transferAmount) {
-    CreateUserRequest user1 = AdminSteps.createUser();
-    RequestSpecification userSpec1 = UserSteps.authAs(user1);
-    CreateAccountResponse account1 = UserSteps.createAccount(userSpec1);
-    UserSteps.deposit(userSpec1, account1.getId(), DepositLimits.MAX);
-    UserSteps.deposit(userSpec1, account1.getId(), DepositLimits.MAX);
+  @ParameterizedTest
+  @MethodSource("transferNearMaxAmounts")
+  void shouldAcceptTransferNearMaximumLimit(double transferAmount) {
+    CustomerContext sender = CustomerContext.create()
+      .withAccount()
+      .withDeposits(DepositLimits.MAX, 2);
+    double fundedBalance = sender.balance();
+    CustomerContext receiver = CustomerContext.create()
+      .withAccount();
 
-    CreateUserRequest user2 = AdminSteps.createUser();
-    RequestSpecification userSpec2 = UserSteps.authAs(user2);
-    CreateAccountResponse account2 = UserSteps.createAccount(userSpec2);
-
-    double fundedBalance = DepositLimits.MAX * 2;
-    DepositTransferRequest transferRequest = UserSteps.transferRequest(
-      account1.getId(), account2.getId(), transferAmount);
-    DepositTransferResponse transfer = UserSteps.transfer(userSpec1, transferRequest);
+    DepositTransferRequest transferRequest = sender.transferRequestTo(receiver, transferAmount);
+    DepositTransferResponse transfer = UserSteps.transfer(sender.spec(), transferRequest);
 
     ModelAssertions.assertThatModels(transferRequest, transfer)
       .match();
-
-    UserSteps.assertAccountBalance(userSpec1, account1.getId(), fundedBalance - transferAmount);
-    UserSteps.assertAccountBalance(userSpec2, account2.getId(), transferAmount);
+    sender.assertBalance(fundedBalance - transferAmount);
+    receiver.assertBalance(transferAmount);
   }
 
-  static Stream<Arguments> positiveMaxTransferAmounts() {
+  static Stream<Arguments> transferNearMaxAmounts() {
     return Stream.of(
       Arguments.of(DepositLimits.TRANSFER_MAX),
       Arguments.of(DepositLimits.JUST_BELOW_TRANSFER_MAX));
   }
 
-  @ParameterizedTest()
-  @MethodSource("negativeTransferAmounts")
+  @ParameterizedTest
+  @MethodSource("invalidTransferAmounts")
   void shouldRejectInvalidTransferAmount(double transferAmount) {
-    CreateUserRequest user1 = AdminSteps.createUser();
-    RequestSpecification userSpec1 = UserSteps.authAs(user1);
-    CreateAccountResponse account1 = UserSteps.createAccount(userSpec1);
-    UserSteps.deposit(userSpec1, account1.getId(), DepositLimits.STANDARD);
-
-    CreateUserRequest user2 = AdminSteps.createUser();
-    RequestSpecification userSpec2 = UserSteps.authAs(user2);
-    CreateAccountResponse account2 = UserSteps.createAccount(userSpec2);
+    double depositAmount = RandomData.depositAmount();
+    CustomerContext sender = CustomerContext.create()
+      .withAccount()
+      .withDeposit(depositAmount);
+    CustomerContext receiver = CustomerContext.create()
+      .withAccount();
 
     UserSteps.transferExpectingBadRequest(
-      userSpec1,
-      UserSteps.transferRequest(account1.getId(), account2.getId(), transferAmount));
+      sender.spec(),
+      sender.transferRequestTo(receiver, transferAmount));
 
-    UserSteps.assertAccountBalance(userSpec1, account1.getId(), DepositLimits.STANDARD);
-    UserSteps.assertAccountBalance(userSpec2, account2.getId(), 0);
+    sender.assertBalance(depositAmount);
+    receiver.assertBalance(0);
   }
 
-  static Stream<Arguments> negativeTransferAmounts() {
+  static Stream<Arguments> invalidTransferAmounts() {
     return Stream.of(
       Arguments.of(DepositLimits.ZERO),
       Arguments.of(DepositLimits.NEGATIVE));
@@ -105,27 +92,18 @@ class TransferMoneyTest extends BaseTest {
 
   @Test
   void shouldRejectTransferAboveMaximumLimit() {
-    CreateUserRequest user1 = AdminSteps.createUser();
-    RequestSpecification userSpec1 = UserSteps.authAs(user1);
-    CreateAccountResponse account1 = UserSteps.createAccount(userSpec1);
-    UserSteps.deposit(userSpec1, account1.getId(), DepositLimits.MAX);
-    UserSteps.deposit(userSpec1, account1.getId(), DepositLimits.MAX);
-    UserSteps.deposit(userSpec1, account1.getId(), DepositLimits.MAX);
-
-    CreateUserRequest user2 = AdminSteps.createUser();
-    RequestSpecification userSpec2 = UserSteps.authAs(user2);
-    CreateAccountResponse account2 = UserSteps.createAccount(userSpec2);
-
-    double fundedBalance = DepositLimits.MAX * 3;
+    CustomerContext sender = CustomerContext.create()
+      .withAccount()
+      .withDeposits(DepositLimits.MAX, 3);
+    double fundedBalance = sender.balance();
+    CustomerContext receiver = CustomerContext.create()
+      .withAccount();
 
     UserSteps.transferExpectingBadRequest(
-      userSpec1,
-      UserSteps.transferRequest(
-        account1.getId(),
-        account2.getId(),
-        DepositLimits.ABOVE_TRANSFER_MAX));
+      sender.spec(),
+      sender.transferRequestTo(receiver, DepositLimits.ABOVE_TRANSFER_MAX));
 
-    UserSteps.assertAccountBalance(userSpec1, account1.getId(), fundedBalance);
-    UserSteps.assertAccountBalance(userSpec2, account2.getId(), 0);
+    sender.assertBalance(fundedBalance);
+    receiver.assertBalance(0);
   }
 }

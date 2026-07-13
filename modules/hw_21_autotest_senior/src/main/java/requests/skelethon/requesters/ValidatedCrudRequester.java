@@ -19,6 +19,13 @@ public class ValidatedCrudRequester<M extends BaseModel>
   }
 
   @SuppressWarnings("unchecked")
+  public M post() {
+    return (M) crudRequester.post()
+      .extract()
+      .as(endpoint.getResponseModel());
+  }
+
+  @SuppressWarnings("unchecked")
   public M post(BaseModel model) {
     return (M) crudRequester.post(model)
       .extract()

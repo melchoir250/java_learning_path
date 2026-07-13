@@ -3,6 +3,7 @@ package requests.steps;
 import java.util.Arrays;
 import org.assertj.core.api.Assertions;
 import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 import models.CreateAccountResponse;
 import models.CreateUserRequest;
 import models.CustomerProfile;
@@ -30,7 +31,13 @@ public final class UserSteps {
       userSpec,
       Endpoint.CREATE_ACCOUNT,
       ResponseSpecs.entityWasCreated())
-        .post(null);
+        .post();
+  }
+
+  public static CreateAccountResponse createAccountWithZeroBalance(RequestSpecification userSpec) {
+    CreateAccountResponse account = createAccount(userSpec);
+    assertAccountBalance(userSpec, account.getId(), 0);
+    return account;
   }
 
   public static DepositRequest depositRequest(int accountId, double amount) {
@@ -55,34 +62,60 @@ public final class UserSteps {
     return deposit(userSpec, depositRequest(accountId, amount));
   }
 
-  public static void depositExpectingBadRequest(
+  public static DepositResponse depositAndAssertBalance(
     RequestSpecification userSpec,
-    DepositRequest request,
-    String expectedError) {
-    new CrudRequester(
-      userSpec,
-      Endpoint.DEPOSIT,
-      ResponseSpecs.requestReturnsBadRequestWithMessage(expectedError))
-        .post(request);
+    int accountId,
+    double amount,
+    double expectedBalance) {
+    DepositResponse deposit = deposit(userSpec, accountId, amount);
+    assertAccountBalance(userSpec, accountId, expectedBalance);
+    return deposit;
+  }
+
+  public static double depositTimes(
+    RequestSpecification userSpec,
+    int accountId,
+    double amount,
+    int times) {
+    double balance = 0;
+    for (int i = 0; i < times; i++) {
+      balance += amount;
+      depositAndAssertBalance(userSpec, accountId, amount, balance);
+    }
+    return balance;
+  }
+
+  public static void depositExpectingMinAmountError(
+    RequestSpecification userSpec,
+    DepositRequest request) {
+    depositExpecting(userSpec, request, ResponseSpecs.depositAmountTooLow());
+  }
+
+  public static void depositExpectingMaxAmountError(
+    RequestSpecification userSpec,
+    DepositRequest request) {
+    depositExpecting(userSpec, request, ResponseSpecs.depositAmountTooHigh());
   }
 
   public static void depositExpectingForbidden(
     RequestSpecification userSpec,
-    DepositRequest request,
-    String expectedError) {
-    new CrudRequester(
-      userSpec,
-      Endpoint.DEPOSIT,
-      ResponseSpecs.requestReturnsForbiddenWithMessage(expectedError))
-        .post(request);
+    DepositRequest request) {
+    depositExpecting(userSpec, request, ResponseSpecs.unauthorizedAccountAccess());
   }
 
   public static void depositExpectingUnauthorized(DepositRequest request) {
-    new CrudRequester(
+    depositExpecting(
       RequestSpecs.unauthSpec(),
-      Endpoint.DEPOSIT,
-      ResponseSpecs.requestReturnsUnauthorized())
-        .post(request);
+      request,
+      ResponseSpecs.requestReturnsUnauthorized());
+  }
+
+  private static void depositExpecting(
+    RequestSpecification userSpec,
+    DepositRequest request,
+    ResponseSpecification responseSpec) {
+    new CrudRequester(userSpec, Endpoint.DEPOSIT, responseSpec)
+      .post(request);
   }
 
   public static DepositTransferRequest transferRequest(
@@ -102,16 +135,8 @@ public final class UserSteps {
     return new ValidatedCrudRequester<DepositTransferResponse>(
       userSpec,
       Endpoint.TRANSFER,
-      ResponseSpecs.requestReturnsOKWithMessage("Transfer successful"))
+      ResponseSpecs.transferSuccessful())
         .post(request);
-  }
-
-  public static DepositTransferResponse transfer(
-    RequestSpecification userSpec,
-    int senderAccountId,
-    int receiverAccountId,
-    double amount) {
-    return transfer(userSpec, transferRequest(senderAccountId, receiverAccountId, amount));
   }
 
   public static void transferExpectingBadRequest(
@@ -169,7 +194,7 @@ public final class UserSteps {
     return new ValidatedCrudRequester<UpdateProfileNameResponse>(
       userSpec,
       Endpoint.UPDATE_PROFILE,
-      ResponseSpecs.requestReturnsOKWithMessage("Profile updated successfully"))
+      ResponseSpecs.profileUpdated())
         .put(request);
   }
 

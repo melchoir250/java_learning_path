@@ -4,47 +4,42 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import constants.ProfileLimits;
-import io.restassured.specification.RequestSpecification;
-import models.CreateUserRequest;
-import requests.steps.AdminSteps;
+import generators.RandomData;
+import requests.steps.CustomerContext;
 import requests.steps.UserSteps;
 
 @DisplayName("PUT /api/v1/customer/profile")
 class UpdateProfileNameTest extends BaseTest {
 
-  @ParameterizedTest()
+  @ParameterizedTest
   @MethodSource("positiveNames")
   void shouldAcceptValidProfileName(String newName) {
-    CreateUserRequest user = AdminSteps.createUser();
-    RequestSpecification userSpec = UserSteps.authAs(user);
+    CustomerContext customer = CustomerContext.create();
+    customer.assertProfileName(null);
 
-    UserSteps.assertProfile(userSpec, user.getUsername(), null);
+    UserSteps.updateProfileName(customer.spec(), customer.profileNameRequest(newName));
 
-    UserSteps.updateProfileName(userSpec, UserSteps.updateProfileNameRequest(newName));
-
-    UserSteps.assertProfile(userSpec, user.getUsername(), newName);
+    customer.assertProfileName(newName);
   }
 
   static Stream<Arguments> positiveNames() {
     return Stream.of(
-      Arguments.of(ProfileLimits.VALID_FULL),
+      Arguments.of(RandomData.validProfileName()),
       Arguments.of(ProfileLimits.VALID_ONE_CHAR),
       Arguments.of(ProfileLimits.VALID_MAX_LENGTH));
   }
 
-  @ParameterizedTest()
+  @ParameterizedTest
   @MethodSource("negativeNames")
   void shouldRejectInvalidProfileName(String newName) {
-    CreateUserRequest user = AdminSteps.createUser();
-    RequestSpecification userSpec = UserSteps.authAs(user);
-
-    UserSteps.assertProfile(userSpec, user.getUsername(), null);
+    CustomerContext customer = CustomerContext.create();
+    customer.assertProfileName(null);
 
     UserSteps.updateProfileNameExpectingBadRequest(
-      userSpec,
-      UserSteps.updateProfileNameRequest(newName));
+      customer.spec(),
+      customer.profileNameRequest(newName));
 
-    UserSteps.assertProfile(userSpec, user.getUsername(), null);
+    customer.assertProfileName(null);
   }
 
   static Stream<Arguments> negativeNames() {

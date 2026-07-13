@@ -28,42 +28,38 @@ mvn test -Dtest=UpdateProfileNameTest
 
 ## Тестовые классы
 
-
-| Файл                         | Эндпоинт                         | Тестов |
-| ---------------------------- | -------------------------------- | ------ |
-| `DepositAccountTest.java`    | `POST /api/v1/accounts/deposit`  | 10     |
-| `TransferMoneyTest.java`     | `POST /api/v1/accounts/transfer` | 7      |
-| `UpdateProfileNameTest.java` | `PUT /api/v1/customer/profile`   | 7      |
-
+| Файл | Эндпоинт | Тестов |
+|------|----------|--------|
+| `DepositAccountTest.java` | `POST /api/v1/accounts/deposit` | 9 |
+| `TransferMoneyTest.java` | `POST /api/v1/accounts/transfer` | 8 |
+| `UpdateProfileNameTest.java` | `PUT /api/v1/customer/profile` | 7 |
 
 ---
 
-
-
 ## Архитектура (senior)
 
-Тест = сценарий. HTTP и проверки состояния — в steps / specs / ModelAssertions.
+Тест = сценарий. HTTP и проверки — в steps / specs / ModelAssertions.
 
 ```
-tests/          → сценарий (кто → что → ожидаемое состояние)
-requests/steps/ → AdminSteps, UserSteps (создание юзера, депозит, transfer, GET)
+tests/            → сценарий
+requests/steps/
+  CustomerContext → create → auth → account/deposit (переиспользуемый setup)
+  AdminSteps / UserSteps → атомарные HTTP-шаги + GET-assert'ы
 requests/skelethon/
-  Endpoint      → url + request/response model
-  CrudRequester / ValidatedCrudRequester → HTTP + статус/тело через ResponseSpecs
-models/         → request/response DTO
-models/comparison/ → ModelAssertions + model-comparison.properties
-specs/          → RequestSpecs / ResponseSpecs
-generators/     → RandomModelGenerator (RgxGen)
-configs/        → config.properties (server, apiVersion)
+  Endpoint / CrudRequester / ValidatedCrudRequester
+models/ + models/comparison/
+specs/            → RequestSpecs / ResponseSpecs
+generators/       → RandomModelGenerator, RandomData
+configs/          → config.properties + PROPERTY
 ```
 
 Типичный happy-path:
 
 ```
-AdminSteps.createUser
-  → UserSteps.authAs / createAccount / deposit|transfer|updateProfile
-  → ModelAssertions (request ↔ response) и/или ResponseSpecs (message, status)
-  → UserSteps.assertAccountBalance | assertProfile   // состояние через GET
+CustomerContext.create().withAccount().withDeposit(amount)
+  → action (deposit / transfer / updateProfile)
+  → ModelAssertions / ResponseSpecs
+  → customer.assertBalance(...) | assertProfileName(...)
 ```
 
 Авторизация — **Basic Auth** (токен после login в `RequestSpecs.authAsUser`).
