@@ -43,7 +43,8 @@ class DepositAccountTest extends BaseTest {
     CustomerContext customer = CustomerContext.create()
       .withAccount();
 
-    UserSteps.depositExpectingMinAmountError(customer.spec(), customer.depositRequest(depositAmount));
+    UserSteps.depositExpectingMinAmountError(customer.spec(),
+      customer.depositRequest(depositAmount));
     customer.assertBalance(0);
   }
 
