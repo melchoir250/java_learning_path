@@ -81,8 +81,19 @@ public class TransferMoneyTest {
                 .body("amount", equalTo(50.0f))
                 .body("message", equalTo("Transfer successful"));
 
-        checkBalance(userAuth_1, accountId_1, 950.0f);
-        checkBalance(userAuth_2, accountId_2, 50.0f);
+        given()
+                .header("Authorization", userAuth_1)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_1 + " }.balance", equalTo(950.0f));
+
+        given()
+                .header("Authorization", userAuth_2)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_2 + " }.balance", equalTo(50.0f));
     }
 
     @Test
@@ -136,8 +147,19 @@ public class TransferMoneyTest {
                 .body("amount", equalTo(0.01f))
                 .body("message", equalTo("Transfer successful"));
 
-        checkBalance(userAuth_1, accountId_1, 999.99f);
-        checkBalance(userAuth_2, accountId_2, 0.01f);
+        given()
+                .header("Authorization", userAuth_1)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_1 + " }.balance", equalTo(999.99f));
+
+        given()
+                .header("Authorization", userAuth_2)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_2 + " }.balance", equalTo(0.01f));
     }
 
     @Test
@@ -208,13 +230,23 @@ public class TransferMoneyTest {
                 .body("amount", equalTo(10000.0f))
                 .body("message", equalTo("Transfer successful"));
 
-        checkBalance(userAuth_1, accountId_1, 0.0f);
-        checkBalance(userAuth_2, accountId_2, 10000.0f);
+        given()
+                .header("Authorization", userAuth_1)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_1 + " }.balance", equalTo(0.0f));
+
+        given()
+                .header("Authorization", userAuth_2)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_2 + " }.balance", equalTo(10000.0f));
     }
 
     @Test
     public void transfer_shouldSucceed_forAmountBelowMaximumLimit() {
-
         createUser(username_1, password_1, role);
 
         String userAuth_1 = login(username_1, password_1);
@@ -281,8 +313,19 @@ public class TransferMoneyTest {
                 .body("amount", equalTo(9999.99f))
                 .body("message", equalTo("Transfer successful"));
 
-        checkBalance(userAuth_1, accountId_1, 0.01f);
-        checkBalance(userAuth_2, accountId_2, 9999.99f);
+        given()
+                .header("Authorization", userAuth_1)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_1 + " }.balance", equalTo(0.01f));
+
+        given()
+                .header("Authorization", userAuth_2)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_2 + " }.balance", equalTo(9999.99f));
     }
 
     @Test
@@ -332,8 +375,19 @@ public class TransferMoneyTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        checkBalance(userAuth_1, accountId_1, 1000.0f);
-        checkBalance(userAuth_2, accountId_2, 0.0f);
+        given()
+                .header("Authorization", userAuth_1)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_1 + " }.balance", equalTo(1000.0f));
+
+        given()
+                .header("Authorization", userAuth_2)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_2 + " }.balance", equalTo(0.0f));
     }
 
     @Test
@@ -383,8 +437,19 @@ public class TransferMoneyTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        checkBalance(userAuth_1, accountId_1, 1000.0f);
-        checkBalance(userAuth_2, accountId_2, 0.0f);
+        given()
+                .header("Authorization", userAuth_1)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_1 + " }.balance", equalTo(1000.0f));
+
+        given()
+                .header("Authorization", userAuth_2)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_2 + " }.balance", equalTo(0.0f));
     }
 
     @Test
@@ -469,17 +534,19 @@ public class TransferMoneyTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
 
-        checkBalance(userAuth_1, accountId_1, 15000.0f);
-        checkBalance(userAuth_2, accountId_2, 0.0f);
-    }
-
-    private void checkBalance(String userAuth, int accountId, float balance) {
         given()
-                .header("Authorization", userAuth)
+                .header("Authorization", userAuth_1)
                 .get(baseUrl + "/api/v1/customer/accounts")
                 .then()
                 .statusCode(HttpStatus.SC_OK)
-                .body("find { it.id == " + accountId + " }.balance", equalTo(balance));
+                .body("find { it.id == " + accountId_1 + " }.balance", equalTo(15000.0f));
+
+        given()
+                .header("Authorization", userAuth_2)
+                .get(baseUrl + "/api/v1/customer/accounts")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("find { it.id == " + accountId_2 + " }.balance", equalTo(0.0f));
     }
 
     private String login(String username, String password) {

@@ -34,7 +34,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = "MAXIMUS Petrov";
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -50,7 +56,13 @@ public class UpdateProfileNameTest {
                 .body("message", equalTo("Profile updated successfully"))
                 .body("customer.name", equalTo(newName));
 
-        getProfile(userAuth, username, newName);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(newName));
     }
 
     @Test
@@ -59,7 +71,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = "M P";
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -75,7 +93,13 @@ public class UpdateProfileNameTest {
                 .body("message", equalTo("Profile updated successfully"))
                 .body("customer.name", equalTo(newName));
 
-        getProfile(userAuth, username, newName);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(newName));
     }
 
     @Test
@@ -84,7 +108,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = "A".repeat(100) + " " + "B".repeat(99);
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -100,7 +130,13 @@ public class UpdateProfileNameTest {
                 .body("message", equalTo("Profile updated successfully"))
                 .body("customer.name", equalTo(newName));
 
-        getProfile(userAuth, username, newName);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(newName));
     }
 
     @Test
@@ -109,7 +145,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = " ";
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -122,6 +164,14 @@ public class UpdateProfileNameTest {
                 .put(baseUrl + "/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
+
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
     }
 
     @Test
@@ -130,7 +180,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = "Petrov123";
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -143,6 +199,14 @@ public class UpdateProfileNameTest {
                 .put(baseUrl + "/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
+
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
     }
 
     @Test
@@ -151,7 +215,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = "Petrov@";
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -164,6 +234,14 @@ public class UpdateProfileNameTest {
                 .put(baseUrl + "/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
+
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
     }
 
     @Test
@@ -172,7 +250,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = "A".repeat(500) + " " + "B".repeat(205);
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -185,6 +269,14 @@ public class UpdateProfileNameTest {
                 .put(baseUrl + "/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
+
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
     }
 
     @Test
@@ -193,7 +285,13 @@ public class UpdateProfileNameTest {
         String userAuth = login(username, password);
         String newName = "A B C";
 
-        getProfile(userAuth, username, null);
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
 
         given()
                 .contentType(ContentType.JSON)
@@ -206,6 +304,14 @@ public class UpdateProfileNameTest {
                 .put(baseUrl + "/api/v1/customer/profile")
                 .then()
                 .statusCode(HttpStatus.SC_BAD_REQUEST);
+
+        given()
+                .header("Authorization", userAuth)
+                .get(baseUrl + "/api/v1/customer/profile")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", equalTo(username))
+                .body("name", equalTo(null));
     }
 
     private String login(String username, String password) {
@@ -240,15 +346,5 @@ public class UpdateProfileNameTest {
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED);
-    }
-
-    private void getProfile(String userAuth, String expectedUsername, String expectedName) {
-        given()
-                .header("Authorization", userAuth)
-                .get(baseUrl + "/api/v1/customer/profile")
-                .then()
-                .statusCode(HttpStatus.SC_OK)
-                .body("username", equalTo(expectedUsername))
-                .body("name", equalTo(expectedName));
     }
 }
