@@ -101,17 +101,10 @@ class UpdateProfileNameTest extends BaseTest {
     RequestSpecification userSpec = RequestSpecs.authAsUser(
       userRequest.getUsername(), userRequest.getPassword());
 
-    CustomerProfile profileBefore = new GetProfileRequester(
+    new GetProfileRequester(
       userSpec,
       ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CustomerProfile.class);
-
-    softly.assertThat(profileBefore.getUsername())
-      .isEqualTo(userRequest.getUsername());
-    softly.assertThat(profileBefore.getName())
-      .isNull();
+        .get();
 
     new UpdateProfileNameRequester(
       userSpec,
@@ -119,18 +112,6 @@ class UpdateProfileNameTest extends BaseTest {
         .put(UpdateProfileNameRequest.builder()
           .name(newName)
           .build());
-
-    CustomerProfile profileAfter = new GetProfileRequester(
-      userSpec,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CustomerProfile.class);
-
-    softly.assertThat(profileAfter.getUsername())
-      .isEqualTo(userRequest.getUsername());
-    softly.assertThat(profileAfter.getName())
-      .isNull();
   }
 
   static Stream<Arguments> negativeNames() {

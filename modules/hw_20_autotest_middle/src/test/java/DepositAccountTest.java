@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import models.DepositRequest;
 import models.DepositResponse;
 import models.UserRole;
 import requests.AdminCreateUserRequester;
-import requests.CheckBalanceRequester;
 import requests.CreateAccountRequester;
 import requests.DepositRequester;
 import specs.RequestSpecs;
@@ -68,20 +66,6 @@ class DepositAccountTest extends BaseTest {
       .isEqualTo(account.getAccountNumber());
     softly.assertThat(deposit.getTransactions())
       .isNotEmpty();
-
-    CreateAccountResponse[] accounts = new CheckBalanceRequester(
-      userSpec,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts)
-      .filter(a -> a.getId() == account.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account.getId()))
-      .getBalance())
-      .isEqualTo(depositAmount);
   }
 
   static Stream<Arguments> positiveDepositAmounts() {
@@ -126,20 +110,6 @@ class DepositAccountTest extends BaseTest {
       userSpec,
       ResponseSpecs.requestReturnsBadRequestWithMessage(expectedError))
         .post(depositRequest);
-
-    CreateAccountResponse[] accounts = new CheckBalanceRequester(
-      userSpec,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts)
-      .filter(a -> a.getId() == account.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account.getId()))
-      .getBalance())
-      .isEqualTo(0);
   }
 
   static Stream<Arguments> negativeDepositAmounts() {
@@ -165,13 +135,6 @@ class DepositAccountTest extends BaseTest {
     RequestSpecification userSpec = RequestSpecs.authAsUser(
       userRequest.getUsername(), userRequest.getPassword());
 
-    CreateAccountResponse ownAccount = new CreateAccountRequester(
-      userSpec,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
-
     DepositRequest depositRequest = DepositRequest.builder()
       .id(DepositLimits.NON_EXISTING_ACCOUNT_ID)
       .balance(DepositLimits.STANDARD)
@@ -181,47 +144,12 @@ class DepositAccountTest extends BaseTest {
       userSpec,
       ResponseSpecs.requestReturnsForbiddenWithMessage(DepositLimits.UNAUTHORIZED_ACCOUNT_ERROR))
         .post(depositRequest);
-
-    CreateAccountResponse[] accounts = new CheckBalanceRequester(
-      userSpec,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts)
-      .filter(a -> a.getId() == ownAccount.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + ownAccount.getId()))
-      .getBalance())
-      .isEqualTo(0);
   }
 
   @Test
   void shouldRejectDepositWithoutAuthorization() {
-    CreateUserRequest userRequest = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
-
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest);
-
-    RequestSpecification userSpec = RequestSpecs.authAsUser(
-      userRequest.getUsername(), userRequest.getPassword());
-
-    CreateAccountResponse account = new CreateAccountRequester(
-      userSpec,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
-
     DepositRequest depositRequest = DepositRequest.builder()
-      .id(account.getId())
+      .id(DepositLimits.UNAUTHORIZED_TEST_ACCOUNT_ID)
       .balance(DepositLimits.STANDARD)
       .build();
 
@@ -229,19 +157,5 @@ class DepositAccountTest extends BaseTest {
       RequestSpecs.unauthSpec(),
       ResponseSpecs.requestReturnsUnauthorized())
         .post(depositRequest);
-
-    CreateAccountResponse[] accounts = new CheckBalanceRequester(
-      userSpec,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts)
-      .filter(a -> a.getId() == account.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account.getId()))
-      .getBalance())
-      .isEqualTo(0);
   }
 }

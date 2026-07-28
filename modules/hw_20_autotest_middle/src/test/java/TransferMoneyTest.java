@@ -29,66 +29,19 @@ class TransferMoneyTest extends BaseTest {
   @ParameterizedTest()
   @MethodSource("positiveTransferAmounts")
   void shouldAcceptPositiveTransferAmount(double depositAmount, double transferAmount) {
-    CreateUserRequest userRequest1 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
+    CreateUserRequest userRequest1 = createUserRequest();
+    createUser(userRequest1);
+    RequestSpecification userSpec1 = authAsUser(userRequest1);
+    CreateAccountResponse account1 = createAccount(userSpec1);
+    deposit(userSpec1, account1.getId(), depositAmount);
 
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest1);
+    CreateUserRequest userRequest2 = createUserRequest();
+    createUser(userRequest2);
+    RequestSpecification userSpec2 = authAsUser(userRequest2);
+    CreateAccountResponse account2 = createAccount(userSpec2);
 
-    RequestSpecification userSpec1 = RequestSpecs.authAsUser(
-      userRequest1.getUsername(), userRequest1.getPassword());
-
-    CreateAccountResponse account1 = new CreateAccountRequester(
-      userSpec1,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
-
-    new DepositRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositRequest.builder()
-          .id(account1.getId())
-          .balance(depositAmount)
-          .build());
-
-    CreateUserRequest userRequest2 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
-
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest2);
-
-    RequestSpecification userSpec2 = RequestSpecs.authAsUser(
-      userRequest2.getUsername(), userRequest2.getPassword());
-
-    CreateAccountResponse account2 = new CreateAccountRequester(
-      userSpec2,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
-
-    DepositTransferResponse transfer = new DepositTransferRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositTransferRequest.builder()
-          .senderAccountId(account1.getId())
-          .receiverAccountId(account2.getId())
-          .amount(transferAmount)
-          .build())
-        .extract()
-        .as(DepositTransferResponse.class);
+    DepositTransferResponse transfer = transfer(
+      userSpec1, account1.getId(), account2.getId(), transferAmount);
 
     softly.assertThat(transfer.getMessage())
       .isEqualTo(DepositLimits.TRANSFER_SUCCESS_MESSAGE);
@@ -99,33 +52,8 @@ class TransferMoneyTest extends BaseTest {
     softly.assertThat(transfer.getAmount())
       .isEqualTo(transferAmount);
 
-    CreateAccountResponse[] accounts1 = new CheckBalanceRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts1)
-      .filter(a -> a.getId() == account1.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account1.getId()))
-      .getBalance())
-      .isEqualTo(depositAmount - transferAmount);
-
-    CreateAccountResponse[] accounts2 = new CheckBalanceRequester(
-      userSpec2,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts2)
-      .filter(a -> a.getId() == account2.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account2.getId()))
-      .getBalance())
-      .isEqualTo(transferAmount);
+    assertBalance(userSpec1, account1.getId(), depositAmount - transferAmount);
+    assertBalance(userSpec2, account2.getId(), transferAmount);
   }
 
   static Stream<Arguments> positiveTransferAmounts() {
@@ -137,76 +65,21 @@ class TransferMoneyTest extends BaseTest {
   @ParameterizedTest()
   @MethodSource("positiveMaxTransferAmounts")
   void shouldAcceptPositiveTransferAmountNearMax(double transferAmount) {
-    CreateUserRequest userRequest1 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
+    CreateUserRequest userRequest1 = createUserRequest();
+    createUser(userRequest1);
+    RequestSpecification userSpec1 = authAsUser(userRequest1);
+    CreateAccountResponse account1 = createAccount(userSpec1);
+    deposit(userSpec1, account1.getId(), DepositLimits.MAX);
+    deposit(userSpec1, account1.getId(), DepositLimits.MAX);
 
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest1);
-
-    RequestSpecification userSpec1 = RequestSpecs.authAsUser(
-      userRequest1.getUsername(), userRequest1.getPassword());
-
-    CreateAccountResponse account1 = new CreateAccountRequester(
-      userSpec1,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
-
-    new DepositRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositRequest.builder()
-          .id(account1.getId())
-          .balance(DepositLimits.MAX)
-          .build());
-
-    new DepositRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositRequest.builder()
-          .id(account1.getId())
-          .balance(DepositLimits.MAX)
-          .build());
-
-    CreateUserRequest userRequest2 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
-
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest2);
-
-    RequestSpecification userSpec2 = RequestSpecs.authAsUser(
-      userRequest2.getUsername(), userRequest2.getPassword());
-
-    CreateAccountResponse account2 = new CreateAccountRequester(
-      userSpec2,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
+    CreateUserRequest userRequest2 = createUserRequest();
+    createUser(userRequest2);
+    RequestSpecification userSpec2 = authAsUser(userRequest2);
+    CreateAccountResponse account2 = createAccount(userSpec2);
 
     double fundedBalance = DepositLimits.MAX * 2;
-
-    DepositTransferResponse transfer = new DepositTransferRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositTransferRequest.builder()
-          .senderAccountId(account1.getId())
-          .receiverAccountId(account2.getId())
-          .amount(transferAmount)
-          .build())
-        .extract()
-        .as(DepositTransferResponse.class);
+    DepositTransferResponse transfer = transfer(
+      userSpec1, account1.getId(), account2.getId(), transferAmount);
 
     softly.assertThat(transfer.getMessage())
       .isEqualTo(DepositLimits.TRANSFER_SUCCESS_MESSAGE);
@@ -217,33 +90,8 @@ class TransferMoneyTest extends BaseTest {
     softly.assertThat(transfer.getAmount())
       .isEqualTo(transferAmount);
 
-    CreateAccountResponse[] accounts1 = new CheckBalanceRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts1)
-      .filter(a -> a.getId() == account1.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account1.getId()))
-      .getBalance())
-      .isEqualTo(fundedBalance - transferAmount);
-
-    CreateAccountResponse[] accounts2 = new CheckBalanceRequester(
-      userSpec2,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts2)
-      .filter(a -> a.getId() == account2.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account2.getId()))
-      .getBalance())
-      .isEqualTo(transferAmount);
+    assertBalance(userSpec1, account1.getId(), fundedBalance - transferAmount);
+    assertBalance(userSpec2, account2.getId(), transferAmount);
   }
 
   static Stream<Arguments> positiveMaxTransferAmounts() {
@@ -255,55 +103,16 @@ class TransferMoneyTest extends BaseTest {
   @ParameterizedTest()
   @MethodSource("negativeTransferAmounts")
   void shouldRejectInvalidTransferAmount(double transferAmount) {
-    CreateUserRequest userRequest1 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
+    CreateUserRequest userRequest1 = createUserRequest();
+    createUser(userRequest1);
+    RequestSpecification userSpec1 = authAsUser(userRequest1);
+    CreateAccountResponse account1 = createAccount(userSpec1);
+    deposit(userSpec1, account1.getId(), DepositLimits.STANDARD);
 
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest1);
-
-    RequestSpecification userSpec1 = RequestSpecs.authAsUser(
-      userRequest1.getUsername(), userRequest1.getPassword());
-
-    CreateAccountResponse account1 = new CreateAccountRequester(
-      userSpec1,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
-
-    new DepositRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositRequest.builder()
-          .id(account1.getId())
-          .balance(DepositLimits.STANDARD)
-          .build());
-
-    CreateUserRequest userRequest2 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
-
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest2);
-
-    RequestSpecification userSpec2 = RequestSpecs.authAsUser(
-      userRequest2.getUsername(), userRequest2.getPassword());
-
-    CreateAccountResponse account2 = new CreateAccountRequester(
-      userSpec2,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
+    CreateUserRequest userRequest2 = createUserRequest();
+    createUser(userRequest2);
+    RequestSpecification userSpec2 = authAsUser(userRequest2);
+    CreateAccountResponse account2 = createAccount(userSpec2);
 
     new DepositTransferRequester(
       userSpec1,
@@ -314,33 +123,8 @@ class TransferMoneyTest extends BaseTest {
           .amount(transferAmount)
           .build());
 
-    CreateAccountResponse[] accounts1 = new CheckBalanceRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts1)
-      .filter(a -> a.getId() == account1.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account1.getId()))
-      .getBalance())
-      .isEqualTo(DepositLimits.STANDARD);
-
-    CreateAccountResponse[] accounts2 = new CheckBalanceRequester(
-      userSpec2,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts2)
-      .filter(a -> a.getId() == account2.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account2.getId()))
-      .getBalance())
-      .isEqualTo(0);
+    assertBalance(userSpec1, account1.getId(), DepositLimits.STANDARD);
+    assertBalance(userSpec2, account2.getId(), 0);
   }
 
   static Stream<Arguments> negativeTransferAmounts() {
@@ -351,71 +135,18 @@ class TransferMoneyTest extends BaseTest {
 
   @Test
   void shouldRejectTransferAboveMaximumLimit() {
-    CreateUserRequest userRequest1 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
+    CreateUserRequest userRequest1 = createUserRequest();
+    createUser(userRequest1);
+    RequestSpecification userSpec1 = authAsUser(userRequest1);
+    CreateAccountResponse account1 = createAccount(userSpec1);
+    deposit(userSpec1, account1.getId(), DepositLimits.MAX);
+    deposit(userSpec1, account1.getId(), DepositLimits.MAX);
+    deposit(userSpec1, account1.getId(), DepositLimits.MAX);
 
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest1);
-
-    RequestSpecification userSpec1 = RequestSpecs.authAsUser(
-      userRequest1.getUsername(), userRequest1.getPassword());
-
-    CreateAccountResponse account1 = new CreateAccountRequester(
-      userSpec1,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
-
-    new DepositRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositRequest.builder()
-          .id(account1.getId())
-          .balance(DepositLimits.MAX)
-          .build());
-
-    new DepositRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositRequest.builder()
-          .id(account1.getId())
-          .balance(DepositLimits.MAX)
-          .build());
-
-    new DepositRequester(
-      userSpec1,
-      ResponseSpecs.requestReturnsOK())
-        .post(DepositRequest.builder()
-          .id(account1.getId())
-          .balance(DepositLimits.MAX)
-          .build());
-
-    CreateUserRequest userRequest2 = CreateUserRequest.builder()
-      .username(RandomData.getUsername())
-      .password(RandomData.getPassword())
-      .role(UserRole.USER.toString())
-      .build();
-
-    new AdminCreateUserRequester(
-      RequestSpecs.adminSpec(),
-      ResponseSpecs.entityWasCreated())
-        .post(userRequest2);
-
-    RequestSpecification userSpec2 = RequestSpecs.authAsUser(
-      userRequest2.getUsername(), userRequest2.getPassword());
-
-    CreateAccountResponse account2 = new CreateAccountRequester(
-      userSpec2,
-      ResponseSpecs.entityWasCreated())
-        .post(new CreateAccountRequest())
-        .extract()
-        .as(CreateAccountResponse.class);
+    CreateUserRequest userRequest2 = createUserRequest();
+    createUser(userRequest2);
+    RequestSpecification userSpec2 = authAsUser(userRequest2);
+    CreateAccountResponse account2 = createAccount(userSpec2);
 
     double fundedBalance = DepositLimits.MAX * 3;
 
@@ -428,32 +159,82 @@ class TransferMoneyTest extends BaseTest {
           .amount(DepositLimits.ABOVE_TRANSFER_MAX)
           .build());
 
-    CreateAccountResponse[] accounts1 = new CheckBalanceRequester(
-      userSpec1,
+    assertBalance(userSpec1, account1.getId(), fundedBalance);
+    assertBalance(userSpec2, account2.getId(), 0);
+  }
+
+  private CreateUserRequest createUserRequest() {
+    return CreateUserRequest.builder()
+      .username(RandomData.getUsername())
+      .password(RandomData.getPassword())
+      .role(UserRole.USER.toString())
+      .build();
+  }
+
+  private void createUser(CreateUserRequest userRequest) {
+    new AdminCreateUserRequester(
+      RequestSpecs.adminSpec(),
+      ResponseSpecs.entityWasCreated())
+        .post(userRequest);
+  }
+
+  private RequestSpecification authAsUser(CreateUserRequest userRequest) {
+    return RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword());
+  }
+
+  private CreateAccountResponse createAccount(RequestSpecification userSpec) {
+    return new CreateAccountRequester(
+      userSpec,
+      ResponseSpecs.entityWasCreated())
+        .post(new CreateAccountRequest())
+        .extract()
+        .as(CreateAccountResponse.class);
+  }
+
+  private void deposit(RequestSpecification userSpec, int accountId, double amount) {
+    new DepositRequester(
+      userSpec,
+      ResponseSpecs.requestReturnsOK())
+        .post(DepositRequest.builder()
+          .id(accountId)
+          .balance(amount)
+          .build());
+  }
+
+  private DepositTransferResponse transfer(
+    RequestSpecification userSpec,
+    int senderAccountId,
+    int receiverAccountId,
+    double amount) {
+    return new DepositTransferRequester(
+      userSpec,
+      ResponseSpecs.requestReturnsOK())
+        .post(DepositTransferRequest.builder()
+          .senderAccountId(senderAccountId)
+          .receiverAccountId(receiverAccountId)
+          .amount(amount)
+          .build())
+        .extract()
+        .as(DepositTransferResponse.class);
+  }
+
+  private void assertBalance(RequestSpecification userSpec, int accountId, double expectedBalance) {
+    CreateAccountResponse[] accounts = new CheckBalanceRequester(
+      userSpec,
       ResponseSpecs.requestReturnsOK())
         .get()
         .extract()
         .as(CreateAccountResponse[].class);
 
-    softly.assertThat(Arrays.stream(accounts1)
-      .filter(a -> a.getId() == account1.getId())
-      .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account1.getId()))
-      .getBalance())
-      .isEqualTo(fundedBalance);
+    softly.assertThat(balanceOf(accounts, accountId))
+      .isEqualTo(expectedBalance);
+  }
 
-    CreateAccountResponse[] accounts2 = new CheckBalanceRequester(
-      userSpec2,
-      ResponseSpecs.requestReturnsOK())
-        .get()
-        .extract()
-        .as(CreateAccountResponse[].class);
-
-    softly.assertThat(Arrays.stream(accounts2)
-      .filter(a -> a.getId() == account2.getId())
+  private double balanceOf(CreateAccountResponse[] accounts, int accountId) {
+    return Arrays.stream(accounts)
+      .filter(account -> account.getId() == accountId)
       .findFirst()
-      .orElseThrow(() -> new AssertionError("Account not found: " + account2.getId()))
-      .getBalance())
-      .isEqualTo(0);
+      .orElseThrow(() -> new AssertionError("Account not found: " + accountId))
+      .getBalance();
   }
 }
