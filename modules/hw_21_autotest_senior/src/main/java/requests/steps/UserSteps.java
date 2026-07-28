@@ -1,6 +1,7 @@
 package requests.steps;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.Assertions;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
@@ -18,6 +19,7 @@ import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
+import utils.Repeat;
 
 public final class UserSteps {
   private UserSteps() {}
@@ -77,12 +79,13 @@ public final class UserSteps {
     int accountId,
     double amount,
     int times) {
-    double balance = 0;
-    for (int i = 0; i < times; i++) {
-      balance += amount;
-      depositAndAssertBalance(userSpec, accountId, amount, balance);
-    }
-    return balance;
+    AtomicReference<Double> balance = new AtomicReference<>(0.0);
+    Repeat.repeat(times, () -> {
+      double expected = balance.get() + amount;
+      depositAndAssertBalance(userSpec, accountId, amount, expected);
+      balance.set(expected);
+    });
+    return balance.get();
   }
 
   public static void depositExpectingMinAmountError(
